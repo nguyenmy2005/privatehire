@@ -1,5 +1,6 @@
 // MODEL: bản nháp tìm chuyến (lưu giữa trang chủ và trang đặt xe)
 import type { Trip } from "./booking.model";
+import { notifyChange } from "./storage";
 
 const KEY = "ph2_search";
 
@@ -10,4 +11,7 @@ export function loadSearch(): Trip | null {
     return null;
   }
 }
-export const saveSearch = (t: Trip) => localStorage.setItem(KEY, JSON.stringify(t));
+export function saveSearch(t: Trip) {
+  localStorage.setItem(KEY, JSON.stringify(t));
+  notifyChange();
+}

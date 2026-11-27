@@ -95,12 +95,27 @@ const receipt = (b: Booking, c: Vehicle) =>
     `Total: ${gbp(b.price)}`,
   ].filter(Boolean).join("\n");
 
+function pendingVehicle(tripKey: string, trip: Trip): Vehicle | null {
+  try {
+    const raw = sessionStorage.getItem("ph2_pending");
+    if (!raw) return null;
+    const p = JSON.parse(raw) as { id: string; key: string };
+    if (p.key !== tripKey) return null;
+    return available(+trip.passengers, trip.date, trip.time, trip.service).find((x) => x.id === p.id) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function BookFlow({
   email, source, trip, onEdit,
 }: { email: string | null; source: Booking["source"]; trip: Trip; onEdit: () => void }) {
   const online = source === "online";
   const [mobile, setMobile] = useState("");
-  const [step, setStep] = useState<Step>("vehicle");
+  const tripKey = `${trip.service}|${trip.date}|${trip.time}|${trip.pickup}|${trip.destination}`;
+  // Xe khách đã chọn trước khi bị yêu cầu đăng nhập (lưu ở sessionStorage, khôi phục sau khi tải lại trang)
+  const [restored] = useState<Vehicle | null>(() => (email ? pendingVehicle(tripKey, trip) : null));
+  const [step, setStep] = useState<Step>(restored ? "extras" : "vehicle");
   const [minSize, setMinSize] = useState(trip.size ? +trip.size : 0);
   const [type, setType] = useState(trip.vtype ?? "");
   const sizeLocked = !!trip.size;
@@ -111,7 +126,7 @@ export default function BookFlow({
   const [pct, setPct] = useState(0);
   const [applied, setApplied] = useState("");
   const [msg, setMsg] = useState("");
-  const [car, setCar] = useState<Vehicle | null>(null);
+  const [car, setCar] = useState<Vehicle | null>(restored);
   const [extras, setExtras] = useState<Extras>(NO_EXTRAS);
   const [pay, setPay] = useState({ method: "card", number: "", exp: "", cvv: "" });
   const [done, setDone] = useState<Booking | null>(null);
@@ -119,7 +134,6 @@ export default function BookFlow({
 
   const needPhone = notify === "text" && !!email && !findUser(email)?.phone?.trim();
   const keys: Step[] = online ? ["vehicle", "extras", "pay", "done"] : ["vehicle", "extras", "done"];
-  const tripKey = `${trip.service}|${trip.date}|${trip.time}|${trip.pickup}|${trip.destination}`;
   const past = !isFuture(trip.date, trip.time);
   const cars = (past ? [] : available(Math.max(+trip.passengers, minSize), trip.date, trip.time, trip.service))
     .filter((c) => (!type || c.type === type) && (!minSize || c.seats === minSize));
@@ -129,23 +143,9 @@ export default function BookFlow({
 
   useEffect(() => {
     if (!email) return;
-    try {
-      const raw = sessionStorage.getItem("ph2_pending");
-      if (!raw) return;
-      sessionStorage.removeItem("ph2_pending");
-      const p = JSON.parse(raw) as { id: string; key: string };
-      if (p.key !== tripKey) return;
-      const v = available(+trip.passengers, trip.date, trip.time, trip.service).find((x) => x.id === p.id);
-      if (v) {
-        setCar(v);
-        setStep("extras");
-        toast("Welcome back. We kept your selected vehicle.");
-      }
-    } catch {
-      /* ignore */
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    sessionStorage.removeItem("ph2_pending");
+    if (restored) toast("Welcome back. We kept your selected vehicle.");
+  }, [email, restored]);
 
   const apply = (c: string = code) => {
     setCode(c);

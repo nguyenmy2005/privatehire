@@ -1,4 +1,6 @@
-﻿export default function Footer() {
+﻿import Link from "next/link";
+
+export default function Footer() {
   return (
     <footer className="bg-[#14193a] px-5 py-14 text-white print:hidden">
       <div className="mx-auto grid max-w-6xl gap-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -12,10 +14,10 @@
         <div>
           <p className="mb-3 text-sm font-bold uppercase tracking-wide text-white/50">Customers</p>
           <ul className="space-y-2 text-sm text-white/85">
-            <li><a className="hover:text-[#fdb827]" href="/#services">Services</a></li>
-            <li><a className="hover:text-[#fdb827]" href="/#fleet">Our options</a></li>
-            <li><a className="hover:text-[#fdb827]" href="/bookings">My bookings</a></li>
-            <li><a className="hover:text-[#fdb827]" href="/enquiry">Help and enquiries</a></li>
+            <li><Link className="hover:text-[#fdb827]" href="/#services">Services</Link></li>
+            <li><Link className="hover:text-[#fdb827]" href="/#fleet">Our options</Link></li>
+            <li><Link className="hover:text-[#fdb827]" href="/bookings">My bookings</Link></li>
+            <li><Link className="hover:text-[#fdb827]" href="/enquiry">Help and enquiries</Link></li>
           </ul>
         </div>
         <div>
@@ -23,7 +25,7 @@
           <ul className="space-y-2 text-sm text-white/85">
             <li>Call Centre 0977 535 103</li>
             <li>Open 24 hours, 7 days a week</li>
-            <li><a className="underline hover:text-[#fdb827]" href="/staff">Staff login</a></li>
+            <li><Link className="underline hover:text-[#fdb827]" href="/staff">Staff login</Link></li>
           </ul>
         </div>
       </div>

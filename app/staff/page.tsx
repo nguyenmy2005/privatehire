@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Shell from "@/components/Shell";
 import SignInPrompt from "@/components/SignInPrompt";
 import SearchBox from "@/components/SearchBox";
@@ -17,6 +17,7 @@ import type { Offer } from "@/models/offer.model";
 import type { User } from "@/models/user.model";
 import type { Driver, Vehicle } from "@/models/vehicle.model";
 import { digits, fmtDate, isoDate, toast } from "@/lib/ui";
+import { useStoreVersion } from "@/lib/useStore";
 
 const TABS = ["New booking", "Bookings", "Fleet", "Enquiries", "Offers"];
 const tally = (xs: string[]) =>
@@ -468,11 +469,9 @@ function Console({ admin }: { admin: boolean }) {
 }
 
 export default function Staff() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
-  useEffect(() => {
-    setUser(currentUser());
-  }, []);
-  if (user === undefined) return null;
+  const v = useStoreVersion();
+  if (!v) return null;
+  const user = currentUser();
   return (
     <Shell wide tone="navy" title="Call Centre console" subtitle="Verify callers, take bookings, manage the fleet, enquiries and offers.">
       {user?.role === "staff" ? (

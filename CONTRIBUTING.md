@@ -26,6 +26,19 @@ View (app/, components/)  ──gọi──▶  Controller  ──gọi──▶
 
 Các luật này được **ESLint kiểm tra tự động** (xem `eslint.config.mjs`). Chạy `npm run lint` mà báo `no-restricted-imports` là đang gọi sai tầng.
 
+### View đọc dữ liệu thế nào
+
+Dữ liệu nằm trong localStorage nên server không đọc được. Đừng đọc trong `useEffect` rồi `setState` (ESLint sẽ báo lỗi). Dùng hook `useStoreVersion` và đọc thẳng lúc render:
+
+```tsx
+import { useStoreVersion } from "@/lib/useStore";
+
+const v = useStoreVersion();            // 0 trên server, > 0 trên trình duyệt
+const user = v ? currentUser() : null;  // tự vẽ lại mỗi khi Model ghi dữ liệu
+```
+
+Mỗi lần Model gọi `set()` (hay đăng nhập/đăng xuất), mọi component đang dùng hook này sẽ tự cập nhật, không cần tải lại trang. Form cần giá trị ban đầu từ dữ liệu thì tách thành component con, truyền dữ liệu qua props và đặt `key` (xem `app/account/page.tsx`).
+
 ### Bản đồ file
 
 | File | Chứa gì |
@@ -48,6 +61,8 @@ Các luật này được **ESLint kiểm tra tự động** (xem `eslint.config
 | `controllers/message.controller.ts` | `send`, `messages`, `markRead`, `unread` |
 | `controllers/enquiry.controller.ts` | đọc/lưu câu hỏi |
 | `controllers/seed.ts` | Dữ liệu demo, tự chạy lần đầu mở web |
+| `controllers/store.controller.ts` | Cho View nghe "dữ liệu vừa đổi" |
+| `lib/useStore.ts` | Hook `useStoreVersion` cho View |
 
 ## 2. Ai giữ phần nào
 
@@ -91,7 +106,7 @@ Tên hàm + tham số + kiểu trả về được `export` từ `controllers/` 
    ```bash
    npm run lint
    ```
-5. Push và mở Pull Request vào `main`. **Người còn lại review** rồi mới merge. Không push thẳng lên `main`.
+5. Push và mở Pull Request vào `main`. GitHub Actions (`.github/workflows/ci.yml`) tự chạy lint + build; phải xanh ✅ và **người còn lại review** rồi mới merge. Không push thẳng lên `main`.
 6. Merge xong thì xoá nhánh, quay lại bước 1.
 
 ### Tránh conflict

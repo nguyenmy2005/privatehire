@@ -16,15 +16,6 @@ export function toast(message: string) {
   window.dispatchEvent(new CustomEvent("ph:toast", { detail: message }));
 }
 
-export function flash(message: string) {
-  sessionStorage.setItem("ph2_flash", message);
-}
-
-export function afterLogin(role: string) {
-  if (role === "staff") window.location.href = "/staff";
-  else window.location.reload();
-}
-
 export function fillSearch(d: Record<string, string>) {
   window.dispatchEvent(new CustomEvent("ph:fill", { detail: d }));
   window.scrollTo({ top: 0, behavior: "smooth" });

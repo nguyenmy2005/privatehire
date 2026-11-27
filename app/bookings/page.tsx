@@ -1,5 +1,6 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useState } from "react";
 import Shell from "@/components/Shell";
 import SignInPrompt from "@/components/SignInPrompt";
 import { currentUser } from "@/controllers/auth.controller";
@@ -11,6 +12,7 @@ import { checkRoute, groupsFor, labelsFor, tripFare } from "@/controllers/route.
 import { gbp } from "@/lib/format";
 import type { Booking, Review } from "@/models/booking.model";
 import { fmtDate, toast } from "@/lib/ui";
+import { useStoreVersion } from "@/lib/useStore";
 import PlacePicker from "@/components/PlacePicker";
 
 const STATUS: Record<string, string> = { confirmed: "bg-blue-100 text-blue-800", completed: "bg-green-100 text-green-800", cancelled: "bg-slate-200 text-slate-600" };
@@ -78,28 +80,20 @@ function ReviewForm({ onSave }: { onSave: (r: Review) => void }) {
 }
 
 export default function MyBookings() {
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
-  const [ready, setReady] = useState(false);
-  const [list, setList] = useState<Booking[]>([]);
+  const v = useStoreVersion();
+  const ready = v > 0;
+  const u = ready ? currentUser() : null;
+  const email = u?.email ?? "";
+  const role = u?.role ?? "";
+  const list = ready
+    ? bookings().filter((b) => b.email === email).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+    : [];
   const [tab, setTab] = useState("confirmed");
   const [edit, setEdit] = useState<Booking | null>(null);
   const [confirmId, setConfirmId] = useState("");
   const [msg, setMsg] = useState("");
-  const load = (e: string) =>
-    setList(bookings().filter((b) => b.email === e).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)));
-
-  useEffect(() => {
-    const u = currentUser();
-    setEmail(u?.email ?? "");
-    setRole(u?.role ?? "");
-    load(u?.email ?? "");
-    setReady(true);
-  }, []);
-
   const save = (b: Booking) => {
     saveBooking(b);
-    load(email);
     setEdit(null);
     setConfirmId("");
     setMsg("");
@@ -151,7 +145,7 @@ export default function MyBookings() {
       {!ready ? null : !email ? (
         <SignInPrompt text="Sign in to see and manage your bookings." />
       ) : role === "staff" ? (
-        <p className="py-8 text-center text-slate-600">Staff accounts manage bookings in the <a href="/staff" className="font-bold text-[#2d5bf0] underline">Call Centre console</a>.</p>
+        <p className="py-8 text-center text-slate-600">Staff accounts manage bookings in the <Link href="/staff" className="font-bold text-[#2d5bf0] underline">Call Centre console</Link>.</p>
       ) : (
         <>
           <div className="mb-8 grid grid-cols-3 divide-x divide-slate-200 border-y border-slate-200">
@@ -177,7 +171,7 @@ export default function MyBookings() {
             <div className="rounded-3xl bg-[#f0f3fa] py-14 text-center">
               <p className="text-xl font-extrabold">Nothing here yet</p>
               <p className="mb-5 mt-1 text-sm text-slate-600">Ready for your next journey?</p>
-              <a href="/" className="btn btn-accent">Book a ride</a>
+              <Link href="/" className="btn btn-accent">Book a ride</Link>
             </div>
           )}
           <div className="space-y-5">

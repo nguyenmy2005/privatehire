@@ -1,5 +1,5 @@
 // MODEL: tài khoản người dùng và phiên đăng nhập
-import { get, set } from "./storage";
+import { get, notifyChange, set } from "./storage";
 
 export type Role = "customer" | "staff";
 export type User = {
@@ -25,5 +25,11 @@ export const updateUser = (email: string, patch: Partial<Omit<User, "role" | "em
   saveUsers(storedUsers().map((u) => (u.email === email ? { ...u, ...patch } : u)));
 
 export const sessionEmail = () => localStorage.getItem(SESSION);
-export const setSession = (email: string) => localStorage.setItem(SESSION, email);
-export const clearSession = () => localStorage.removeItem(SESSION);
+export function setSession(email: string) {
+  localStorage.setItem(SESSION, email);
+  notifyChange();
+}
+export function clearSession() {
+  localStorage.removeItem(SESSION);
+  notifyChange();
+}

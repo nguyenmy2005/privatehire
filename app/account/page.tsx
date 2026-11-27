@@ -1,22 +1,30 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Shell from "@/components/Shell";
 import SignInPrompt from "@/components/SignInPrompt";
 import { currentUser, updateUser } from "@/controllers/auth.controller";
 import type { User } from "@/models/user.model";
 import { cardValid, digits, toast } from "@/lib/ui";
+import { useStoreVersion } from "@/lib/useStore";
 
 export default function Account() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
-  const [f, setF] = useState({ name: "", phone: "", address: "" });
+  const v = useStoreVersion();
+  const user = v ? currentUser() : undefined;
+  return (
+    <Shell wide title="My account" subtitle="Update your details and payment card.">
+      {user === undefined ? null : !user || user.role !== "customer" ? (
+        <SignInPrompt text="Sign in with a customer account to manage your details." />
+      ) : (
+        <AccountForms key={user.email} user={user} />
+      )}
+    </Shell>
+  );
+}
+
+function AccountForms({ user }: { user: User }) {
+  const [f, setF] = useState({ name: user.name, phone: user.phone, address: user.address });
   const [card, setCard] = useState("");
   const [err, setErr] = useState("");
-
-  useEffect(() => {
-    const u = currentUser();
-    setUser(u);
-    if (u) setF({ name: u.name, phone: u.phone, address: u.address });
-  }, []);
 
   const saveDetails = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,17 +38,12 @@ export default function Account() {
     if (!user) return;
     if (!cardValid(card)) return setErr("The card number is not valid.");
     updateUser(user.email, { cardLast4: digits(card).slice(-4) });
-    setUser({ ...user, cardLast4: digits(card).slice(-4) });
     setCard("");
     setErr("");
     toast("Payment card saved.");
   };
 
   return (
-    <Shell wide title="My account" subtitle="Update your details and payment card.">
-      {user === undefined ? null : !user || user.role !== "customer" ? (
-        <SignInPrompt text="Sign in with a customer account to manage your details." />
-      ) : (
         <div className="space-y-8">
           <div className="flex items-center gap-4 rounded-3xl bg-[#f0f3fa] p-5">
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2d5bf0] text-3xl font-extrabold text-white">{user.name.charAt(0).toUpperCase()}</span>
@@ -77,7 +80,5 @@ export default function Account() {
             </form>
           </div>
         </div>
-      )}
-    </Shell>
   );
 }
