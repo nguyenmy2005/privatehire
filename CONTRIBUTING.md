@@ -84,16 +84,24 @@ Tên hàm + tham số + kiểu trả về được `export` từ `controllers/` 
 
 ## 3. Quy trình Git
 
-1. Luôn bắt đầu từ `main` mới nhất:
+Mỗi người có **một nhánh riêng** trên GitHub:
+
+| Nhánh | Của ai | Làm gì |
+|---|---|---|
+| `main` | chung | Code đã review, luôn chạy được. Không ai push thẳng vào. |
+| `my` | Mỹ | Model + Controller |
+| `linh` | Linh | View |
+
+1. Lần đầu (clone xong) chuyển sang nhánh của mình:
    ```bash
-   git switch main && git pull
+   git switch my
    ```
-2. Tạo nhánh theo người + việc:
    ```bash
-   git switch -c my/tinh-gia-gio-cao-diem
+   git switch linh
    ```
+2. Mỗi lần bắt đầu làm, lấy code mới nhất của `main` vào nhánh mình (để có phần người kia đã merge):
    ```bash
-   git switch -c linh/trang-lich-su-dat-xe
+   git pull && git pull origin main
    ```
 3. Commit nhỏ, message rõ ràng, có tiền tố tầng:
    - `model: thêm trường note vào Booking`
@@ -106,14 +114,15 @@ Tên hàm + tham số + kiểu trả về được `export` từ `controllers/` 
    ```bash
    npm run lint
    ```
-5. Push và mở Pull Request vào `main`. GitHub Actions (`.github/workflows/ci.yml`) tự chạy lint + build; phải xanh ✅ và **người còn lại review** rồi mới merge. Không push thẳng lên `main`.
-6. Merge xong thì xoá nhánh, quay lại bước 1.
+5. Push lên nhánh của mình (`git push`), rồi mở Pull Request **`my` → `main`** hoặc **`linh` → `main`**. GitHub Actions (`.github/workflows/ci.yml`) tự chạy lint + build; phải xanh ✅ và **người còn lại review** rồi mới merge.
+6. Khi merge PR trên GitHub chọn **Create a merge commit** (không chọn Squash), để nhánh cá nhân vẫn khớp lịch sử với `main`. **Không xoá** nhánh `my` / `linh` sau khi merge, quay lại bước 2 làm tiếp.
 
 ### Tránh conflict
 
 - Mỗi người chỉ sửa trong thư mục mình giữ là gần như không bao giờ conflict.
 - File hay bị đụng chung: `controllers/booking.controller.ts` (export cho View) và `app/globals.css`. Sửa ít, merge sớm.
-- Pull `main` vào nhánh của mình thường xuyên (`git pull origin main`) nếu nhánh sống lâu hơn 1–2 ngày.
+- Mở PR và merge sớm (vài ngày một lần), đừng để nhánh `my` / `linh` lệch `main` quá lâu.
+- Pull `main` vào nhánh của mình mỗi ngày (`git pull origin main`).
 
 ## 4. Chạy dự án
 
