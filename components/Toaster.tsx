@@ -12,11 +12,6 @@ export default function Toaster() {
     };
     const h = (e: Event) => push(String((e as CustomEvent).detail));
     window.addEventListener("ph:toast", h);
-    const f = sessionStorage.getItem("ph2_flash");
-    if (f) {
-      sessionStorage.removeItem("ph2_flash");
-      push(f);
-    }
     return () => window.removeEventListener("ph:toast", h);
   }, []);
 

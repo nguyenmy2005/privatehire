@@ -1,14 +1,16 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBox from "@/components/SearchBox";
 import Img from "@/components/Img";
 import { IMG } from "@/lib/images";
-import { SERVICES } from "@/lib/data";
-import { findUser } from "@/lib/auth";
-import { DURATION, bookings, fromPrice, gbp, quote, vehicles } from "@/lib/store";
-import { fillSearch, fmtDate } from "@/lib/ui";
+import { findUser } from "@/controllers/auth.controller";
+import { SERVICES, DURATION, bookings, vehicles } from "@/controllers/booking.controller";
+import { fromPrice, quote } from "@/controllers/pricing.controller";
+import { gbp } from "@/lib/format";
+import { fmtDate } from "@/lib/ui";
+import { useStoreVersion } from "@/lib/useStore";
 import QuickBook from "@/components/QuickBook";
 
 type Rev = { name: string; text: string; stars: number; date: string; tag: string; verified: boolean };
@@ -71,38 +73,31 @@ const Stars = ({ n, big }: { n: number; big?: boolean }) => (
 );
 
 export default function Home() {
-  const [prices, setPrices] = useState<Record<string, number>>({});
-  const [real, setReal] = useState<Rev[]>([]);
-  const [fleet, setFleet] = useState<Size[]>([]);
   const [all, setAll] = useState(false);
   const [pick, setPick] = useState("");
   const [seats, setSeats] = useState(0);
   const [any, setAny] = useState(false);
 
-  useEffect(() => {
-    setPrices(Object.fromEntries(SERVICES.map((s) => [s.id, fromPrice(s.id)])));
-    const vs = vehicles();
-    setFleet(
-      SIZES.map((seats) => {
-        const g = vs.filter((v) => v.seats === seats);
-        return { seats, names: g.slice(0, 3).map((v) => v.name).join(", ") + (g.length > 3 ? " and " + (g.length - 3) + " more" : ""), from: g.length ? Math.min(...g.map((v) => quote("local", v, "online").price)) : 0 };
-      }).filter((x) => x.names)
-    );
-    setReal(
-      bookings()
-        .filter((b) => b.review && b.review.text)
-        .slice(-4)
-        .reverse()
-        .map((b) => ({
-          name: findUser(b.email)?.name ?? "Customer",
-          text: b.review!.text,
-          stars: Math.round((b.review!.trip + b.review!.car + b.review!.driver) / 3),
-          date: b.date,
-          tag: SERVICES.find((s) => s.id === b.service)?.name ?? "Journey",
-          verified: true,
-        }))
-    );
-  }, []);
+  // Dữ liệu từ localStorage: rỗng khi render trên server, có sau khi vào trình duyệt
+  const v = useStoreVersion();
+  const prices: Record<string, number> = v ? Object.fromEntries(SERVICES.map((s) => [s.id, fromPrice(s.id)])) : {};
+  const vs = v ? vehicles() : [];
+  const fleet: Size[] = SIZES.map((seats) => {
+    const g = vs.filter((v) => v.seats === seats);
+    return { seats, names: g.slice(0, 3).map((v) => v.name).join(", ") + (g.length > 3 ? " and " + (g.length - 3) + " more" : ""), from: g.length ? Math.min(...g.map((v) => quote("local", v, "online").price)) : 0 };
+  }).filter((x) => x.names);
+  const real: Rev[] = (v ? bookings() : [])
+    .filter((b) => b.review && b.review.text)
+    .slice(-4)
+    .reverse()
+    .map((b) => ({
+      name: findUser(b.email)?.name ?? "Customer",
+      text: b.review!.text,
+      stars: Math.round((b.review!.trip + b.review!.car + b.review!.driver) / 3),
+      date: b.date,
+      tag: SERVICES.find((s) => s.id === b.service)?.name ?? "Journey",
+      verified: true,
+    }));
 
   const reviews = [...real, ...SAMPLES];
   const avg = reviews.reduce((a, r) => a + r.stars, 0) / reviews.length;

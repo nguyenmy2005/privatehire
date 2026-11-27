@@ -1,8 +1,12 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useStoreVersion } from "@/lib/useStore";
 import Shell from "@/components/Shell";
-import { currentUser } from "@/lib/auth";
-import { Enquiry, bookings, enquiries, saveEnquiries, uid } from "@/lib/store";
+import { currentUser } from "@/controllers/auth.controller";
+import { bookings } from "@/controllers/booking.controller";
+import { enquiries, saveEnquiries } from "@/controllers/enquiry.controller";
+import { uid } from "@/lib/format";
+import type { Enquiry } from "@/models/enquiry.model";
 import { toast } from "@/lib/ui";
 
 const FAQ: [string, string][] = [
@@ -24,23 +28,24 @@ const CONTACT: [string, string, string, string][] = [
 
 export default function Help() {
   const [q, setQ] = useState("");
-  const [f, setF] = useState({ email: "", topic: "General enquiry", message: "", bookingId: "" });
-  const [mine, setMine] = useState<Enquiry[]>([]);
-  const load = (e: string) => setMine(enquiries().filter((x) => x.email === e));
-
-  useEffect(() => {
-    const u = currentUser();
-    const e = u && u.role === "customer" ? u.email : "";
-    setF((p) => ({ ...p, email: e }));
-    load(e);
-  }, []);
+  const v = useStoreVersion();
+  const u = v ? currentUser() : null;
+  const signedIn = u && u.role === "customer" ? u.email : "";
+  const [form, setForm] = useState({ email: null as string | null, topic: "General enquiry", message: "", bookingId: "" });
+  // Ô email điền sẵn email tài khoản cho tới khi người dùng tự sửa
+  const f = { ...form, email: form.email ?? signedIn };
+  const setF = (next: typeof f) => setForm(next);
+  // "Your enquiries": theo tài khoản, hoặc theo email vừa gửi
+  const [sentFrom, setSentFrom] = useState<string | null>(null);
+  const listFor = sentFrom ?? signedIn;
+  const mine: Enquiry[] = v && listFor ? enquiries().filter((x) => x.email === listFor) : [];
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const email = f.email.trim().toLowerCase();
     saveEnquiries([...enquiries(), { id: uid(), email, topic: f.topic, message: f.message.trim(), bookingId: f.topic === "Enquiry about a specific trip" ? f.bookingId : undefined }]);
     setF({ ...f, message: "", bookingId: "" });
-    load(email);
+    setSentFrom(email);
     toast("Enquiry sent. We will reply by email.");
   };
 

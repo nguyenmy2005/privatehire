@@ -1,7 +1,7 @@
 ﻿"use client";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { PlaceGroup } from "@/lib/places";
+import type { PlaceGroup } from "@/models/place.model";
 
 type Pos = { left: number; width: number; top?: number; bottom?: number; maxH: number };
 

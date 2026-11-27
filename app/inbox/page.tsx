@@ -1,32 +1,36 @@
 ﻿"use client";
 import { useEffect, useState } from "react";
+import { useStoreVersion } from "@/lib/useStore";
 import Shell from "@/components/Shell";
 import SignInPrompt from "@/components/SignInPrompt";
-import { currentUser } from "@/lib/auth";
-import { Message, markRead, messages } from "@/lib/store";
+import { currentUser } from "@/controllers/auth.controller";
+import { markRead, messages } from "@/controllers/message.controller";
+import type { Message } from "@/models/message.model";
 
 export default function Inbox() {
-  const [ready, setReady] = useState(false);
-  const [email, setEmail] = useState("");
-  const [list, setList] = useState<Message[]>([]);
+  const v = useStoreVersion();
+  const u = v ? currentUser() : undefined;
+  return (
+    <Shell title="Messages" subtitle="Emails and text messages from PrivateHire Cars.">
+      {u === undefined ? null : !u || u.role !== "customer" ? (
+        <SignInPrompt text="Sign in to read your emails and text messages." />
+      ) : (
+        <MessageList key={u.email} email={u.email} />
+      )}
+    </Shell>
+  );
+}
 
+function MessageList({ email }: { email: string }) {
+  // Chụp danh sách lúc mở trang để vẫn thấy nhãn "New", sau đó mới đánh dấu đã đọc
+  const [list] = useState<Message[]>(() => messages(email));
   useEffect(() => {
-    const u = currentUser();
-    if (u && u.role === "customer") {
-      setEmail(u.email);
-      setList(messages(u.email));
-      markRead(u.email);
-    }
-    setReady(true);
-  }, []);
+    markRead(email);
+  }, [email]);
 
   const fresh = list.filter((m) => !m.read).length;
 
-  return (
-    <Shell title="Messages" subtitle="Emails and text messages from PrivateHire Cars.">
-      {!ready ? null : !email ? (
-        <SignInPrompt text="Sign in to read your emails and text messages." />
-      ) : list.length === 0 ? (
+  return list.length === 0 ? (
         <div className="py-14 text-center">
           <p className="text-2xl font-extrabold">No messages yet</p>
           <p className="mt-1 text-slate-500">Confirmations and updates will appear here.</p>
@@ -51,7 +55,5 @@ export default function Inbox() {
             ))}
           </div>
         </>
-      )}
-    </Shell>
-  );
+      );
 }

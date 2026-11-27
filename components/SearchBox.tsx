@@ -1,10 +1,13 @@
 ﻿"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SERVICES } from "@/lib/data";
-import { DURATION, fromPrice, gbp, isFuture, type Trip } from "@/lib/store";
+import { SERVICES, DURATION, isFuture, loadSearch, saveSearch } from "@/controllers/booking.controller";
+import { fromPrice } from "@/controllers/pricing.controller";
+import { checkRoute, groupsFor, labelsFor } from "@/controllers/route.controller";
+import { gbp } from "@/lib/format";
+import type { Trip } from "@/models/booking.model";
 import { isoDate } from "@/lib/ui";
-import { checkRoute, groupsFor, labelsFor } from "@/lib/places";
+import { useStoreVersion } from "@/lib/useStore";
 import PlacePicker from "./PlacePicker";
 
 const SHORT: Record<string, string> = { local: "Local", long: "Long distance", airport: "Airport", hotel: "Hotel", meet: "Meet & greet", daily: "Daily hire" };
@@ -12,30 +15,32 @@ const lab = "block text-[11px] font-bold uppercase tracking-wider text-slate-400
 const bare = "mt-0.5 w-full bg-transparent text-[17px] font-semibold text-[#161b33] outline-none placeholder:font-normal placeholder:text-slate-400";
 const cell = "min-w-0 px-5 py-2.5 md:border-l md:border-slate-200";
 
+const BLANK: Trip = { service: "local", pickup: "", destination: "", date: "", time: "10:00", passengers: "1" };
+
 export default function SearchBox({ onSearch, plain = false }: { onSearch?: (t: Trip) => void; plain?: boolean }) {
   const router = useRouter();
-  const [f, setF] = useState<Trip>({ service: "local", pickup: "", destination: "", date: "", time: "10:00", passengers: "1" });
   const [err, setErr] = useState("");
-  const set = (k: keyof Trip, v: string) => setF((x) => ({ ...x, [k]: v }));
-  const [from, setFrom] = useState(0);
-  useEffect(() => { setFrom(fromPrice(f.service)); }, [f.service]);
+  // Giá trị form = mặc định + chuyến đã tìm lần trước (chỉ có trên trình duyệt) + những gì người dùng vừa sửa
+  const v = useStoreVersion();
+  const [edits, setEdits] = useState<Partial<Trip>>({});
+  const saved = v && !onSearch ? loadSearch() : null;
+  const f: Trip = {
+    ...BLANK,
+    date: v ? isoDate(1) : "",
+    ...(saved && isFuture(saved.date, saved.time) ? saved : {}),
+    ...edits,
+  };
+  const setF = (fn: (x: Trip) => Trip) => setEdits(fn(f));
+  const set = (k: keyof Trip, val: string) => setEdits((x) => ({ ...x, [k]: val }));
+  const from = v ? fromPrice(f.service) : 0;
   const hours = DURATION[f.service] ?? 1;
 
+  // Trang chủ bấm "đặt lại chuyến này" sẽ bắn sự kiện ph:fill để điền sẵn form
   useEffect(() => {
-    let init: Partial<Trip> = { date: isoDate(1) };
-    if (!onSearch) {
-      try {
-        const s = JSON.parse(localStorage.getItem("ph2_search") || "null") as Trip | null;
-        if (s && isFuture(s.date, s.time)) init = s;
-      } catch {
-        init = { date: isoDate(1) };
-      }
-    }
-    setF((x) => ({ ...x, ...init }));
-    const h = (e: Event) => setF((x) => ({ ...x, ...(e as CustomEvent<Partial<Trip>>).detail }));
+    const h = (e: Event) => setEdits((x) => ({ ...x, ...(e as CustomEvent<Partial<Trip>>).detail }));
     window.addEventListener("ph:fill", h);
     return () => window.removeEventListener("ph:fill", h);
-  }, [onSearch]);
+  }, []);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +49,7 @@ export default function SearchBox({ onSearch, plain = false }: { onSearch?: (t: 
     if (!isFuture(f.date, f.time)) return setErr("Please choose a date and time in the future.");
     setErr("");
     if (onSearch) return onSearch(f);
-    localStorage.setItem("ph2_search", JSON.stringify({ ...f, size: undefined, vtype: undefined }));
+    saveSearch({ ...f, size: undefined, vtype: undefined });
     router.push("/book");
   };
 

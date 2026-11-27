@@ -1,26 +1,24 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
-import { currentUser, logout, type User } from "@/lib/auth";
-import { unread } from "@/lib/store";
+import { currentUser, logout } from "@/controllers/auth.controller";
+import { unread } from "@/controllers/message.controller";
+import { useStoreVersion } from "@/lib/useStore";
 
 export default function Navbar() {
   const [modal, setModal] = useState<"" | "login" | "register">("");
   const [menu, setMenu] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [count, setCount] = useState(0);
-  const [path, setPath] = useState("");
-
-  useEffect(() => {
-    const u = currentUser();
-    setUser(u);
-    if (u) setCount(unread(u.email));
-    setPath(window.location.pathname);
-  }, []);
+  const router = useRouter();
+  const path = usePathname();
+  const v = useStoreVersion();
+  const user = v ? currentUser() : null;
+  const count = user ? unread(user.email) : 0;
 
   const out = () => {
     logout();
-    window.location.href = "/";
+    router.push("/");
   };
   const staff = user?.role === "staff";
 
@@ -39,17 +37,17 @@ export default function Navbar() {
     <>
       <header className={`sticky top-0 z-40 print:hidden ${staff ? "bg-[#14193a] text-white" : "border-b border-slate-200 bg-white text-[#161b33]"}`}>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
-          <a href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
+          <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#fdb827] text-sm font-extrabold text-[#161b33]">PH</span>
             <span>Private<span className={staff ? "text-[#fdb827]" : "text-[#2d5bf0]"}>Hire</span></span>
             {staff && <span className="ml-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">Staff</span>}
-          </a>
+          </Link>
           <nav className="hidden items-center gap-7 md:flex">
             {links.map(([t, h]) => (
-              <a key={h} href={h} className={linkCls(h)}>
+              <Link key={h} href={h} className={linkCls(h)}>
                 {t}
                 {t === "Messages" && count > 0 && <span className="ml-1.5 rounded-full bg-[#fdb827] px-1.5 py-0.5 text-[10px] font-extrabold text-[#161b33]">{count}</span>}
-              </a>
+              </Link>
             ))}
           </nav>
           <div className="flex items-center gap-2">
@@ -74,7 +72,7 @@ export default function Navbar() {
         </div>
         {menu && (
           <div className={`px-5 pb-3 md:hidden ${staff ? "border-t border-white/10" : "border-t border-slate-100"}`}>
-            {links.map(([t, h]) => <a key={h} href={h} className="block border-b border-slate-100/30 py-3 text-sm font-semibold">{t}</a>)}
+            {links.map(([t, h]) => <Link key={h} href={h} onClick={() => setMenu(false)} className="block border-b border-slate-100/30 py-3 text-sm font-semibold">{t}</Link>)}
           </div>
         )}
       </header>

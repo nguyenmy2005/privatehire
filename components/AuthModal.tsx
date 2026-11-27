@@ -1,8 +1,10 @@
 ﻿"use client";
 import { useState } from "react";
-import { login, register, type User } from "@/lib/auth";
-import { send } from "@/lib/store";
-import { afterLogin, cardValid, digits, flash } from "@/lib/ui";
+import { useRouter } from "next/navigation";
+import { login, register } from "@/controllers/auth.controller";
+import { send } from "@/controllers/message.controller";
+import type { User } from "@/models/user.model";
+import { cardValid, digits, toast } from "@/lib/ui";
 
 type Mode = "login" | "register";
 const PANEL = "https://images.unsplash.com/photo-1529655683826-aba9b3e77383?auto=format&fit=crop&w=900&q=80";
@@ -18,6 +20,14 @@ export default function AuthModal({ onClose, start = "login" }: { onClose: () =>
   const [error, setError] = useState("");
   const [show, setShow] = useState(false);
   const set = (k: keyof typeof form, v: string) => setForm((x) => ({ ...x, [k]: v }));
+  const router = useRouter();
+
+  // Giao diện tự cập nhật theo phiên đăng nhập mới; nhân viên được chuyển sang Call Centre.
+  const afterLogin = (u: User, message: string) => {
+    toast(message);
+    onClose();
+    if (u.role === "staff") router.push("/staff");
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,8 +35,7 @@ export default function AuthModal({ onClose, start = "login" }: { onClose: () =>
     try {
       if (mode === "login") {
         const u = login(form.email, form.password);
-        flash(`Signed in as ${u.name}`);
-        afterLogin(u.role);
+        afterLogin(u, `Signed in as ${u.name}`);
         return;
       }
       if (form.password.length < 8) throw new Error("Password needs at least 8 characters.");
@@ -38,8 +47,7 @@ export default function AuthModal({ onClose, start = "login" }: { onClose: () =>
       send(u.email, "email", "Confirm your PrivateHire account",
         `Hello ${u.name},\n\nWelcome to PrivateHire Cars. Your account was created with ${u.email}.\nBook online to get 15% off and priority service.`);
       login(u.email, form.password);
-      flash(`Account created. A confirmation email was sent to ${u.email} (see Messages).`);
-      afterLogin(u.role);
+      afterLogin(u, `Account created. A confirmation email was sent to ${u.email} (see Messages).`);
     } catch (err) {
       setError((err as Error).message);
     }
