@@ -1,10 +1,12 @@
 ﻿"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SERVICES } from "@/lib/data";
-import { DURATION, fromPrice, gbp, isFuture, type Trip } from "@/lib/store";
+import { SERVICES, DURATION, isFuture, loadSearch, saveSearch } from "@/controllers/booking.controller";
+import { fromPrice } from "@/controllers/pricing.controller";
+import { checkRoute, groupsFor, labelsFor } from "@/controllers/route.controller";
+import { gbp } from "@/lib/format";
+import type { Trip } from "@/models/booking.model";
 import { isoDate } from "@/lib/ui";
-import { checkRoute, groupsFor, labelsFor } from "@/lib/places";
 import PlacePicker from "./PlacePicker";
 
 const SHORT: Record<string, string> = { local: "Local", long: "Long distance", airport: "Airport", hotel: "Hotel", meet: "Meet & greet", daily: "Daily hire" };
@@ -24,12 +26,8 @@ export default function SearchBox({ onSearch, plain = false }: { onSearch?: (t: 
   useEffect(() => {
     let init: Partial<Trip> = { date: isoDate(1) };
     if (!onSearch) {
-      try {
-        const s = JSON.parse(localStorage.getItem("ph2_search") || "null") as Trip | null;
-        if (s && isFuture(s.date, s.time)) init = s;
-      } catch {
-        init = { date: isoDate(1) };
-      }
+      const s = loadSearch();
+      if (s && isFuture(s.date, s.time)) init = s;
     }
     setF((x) => ({ ...x, ...init }));
     const h = (e: Event) => setF((x) => ({ ...x, ...(e as CustomEvent<Partial<Trip>>).detail }));
@@ -44,7 +42,7 @@ export default function SearchBox({ onSearch, plain = false }: { onSearch?: (t: 
     if (!isFuture(f.date, f.time)) return setErr("Please choose a date and time in the future.");
     setErr("");
     if (onSearch) return onSearch(f);
-    localStorage.setItem("ph2_search", JSON.stringify({ ...f, size: undefined, vtype: undefined }));
+    saveSearch({ ...f, size: undefined, vtype: undefined });
     router.push("/book");
   };
 

@@ -1,8 +1,11 @@
 ﻿"use client";
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
-import { currentUser } from "@/lib/auth";
-import { Enquiry, bookings, enquiries, saveEnquiries, uid } from "@/lib/store";
+import { currentUser } from "@/controllers/auth.controller";
+import { bookings } from "@/controllers/booking.controller";
+import { enquiries, saveEnquiries } from "@/controllers/enquiry.controller";
+import { uid } from "@/lib/format";
+import type { Enquiry } from "@/models/enquiry.model";
 import { toast } from "@/lib/ui";
 
 const FAQ: [string, string][] = [

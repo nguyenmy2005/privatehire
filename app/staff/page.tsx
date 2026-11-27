@@ -4,13 +4,19 @@ import Shell from "@/components/Shell";
 import SignInPrompt from "@/components/SignInPrompt";
 import SearchBox from "@/components/SearchBox";
 import BookFlow from "@/components/BookFlow";
-import { SERVICES } from "@/lib/data";
-import { allUsers, createStaff, currentUser, findUser, register, staffUsers, updateUser, type User } from "@/lib/auth";
+import { allUsers, createStaff, currentUser, findUser, register, staffUsers, updateUser } from "@/controllers/auth.controller";
+import { SERVICES, available, bookings, drivers, saveDrivers, saveVehicles, vehicles } from "@/controllers/booking.controller";
+import { enquiries, saveEnquiries } from "@/controllers/enquiry.controller";
+import { send } from "@/controllers/message.controller";
+import { offers, saveOffers } from "@/controllers/offer.controller";
+import { quote, rateForSeats } from "@/controllers/pricing.controller";
+import { gbp, uid } from "@/lib/format";
+import type { Booking, Trip } from "@/models/booking.model";
+import type { Enquiry } from "@/models/enquiry.model";
+import type { Offer } from "@/models/offer.model";
+import type { User } from "@/models/user.model";
+import type { Driver, Vehicle } from "@/models/vehicle.model";
 import { digits, fmtDate, isoDate, toast } from "@/lib/ui";
-import {
-  Booking, Driver, Enquiry, Offer, Trip, Vehicle, available, bookings, drivers, enquiries, gbp, offers,
-  quote, rateForSeats, saveEnquiries, saveOffers, send, set, uid, vehicles,
-} from "@/lib/store";
 
 const TABS = ["New booking", "Bookings", "Fleet", "Enquiries", "Offers"];
 const tally = (xs: string[]) =>
@@ -185,7 +191,7 @@ function Fleet({ refresh }: { refresh: () => void }) {
     };
     if (i >= 0) all[i] = nv;
     else all.push(nv);
-    set("ph2_vehicles", all);
+    saveVehicles(all);
     toast(i >= 0 ? "Minicab updated." : "Minicab added.");
     setV({ plate: "", name: "", colour: "", seats: "4", driverId: "" });
     refresh();
@@ -198,7 +204,7 @@ function Fleet({ refresh }: { refresh: () => void }) {
     const nd: Driver = { id: i >= 0 ? all[i].id : "d" + uid(), name: dr.name.trim(), phone: dr.phone.trim() };
     if (i >= 0) all[i] = nd;
     else all.push(nd);
-    set("ph2_drivers", all);
+    saveDrivers(all);
     toast(i >= 0 ? "Driver updated." : "Driver added.");
     setDr({ name: "", phone: "" });
     refresh();

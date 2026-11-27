@@ -5,9 +5,10 @@ import Footer from "@/components/Footer";
 import SearchBox from "@/components/SearchBox";
 import Img from "@/components/Img";
 import { IMG } from "@/lib/images";
-import { SERVICES } from "@/lib/data";
-import { findUser } from "@/lib/auth";
-import { DURATION, bookings, fromPrice, gbp, quote, vehicles } from "@/lib/store";
+import { findUser } from "@/controllers/auth.controller";
+import { SERVICES, DURATION, bookings, vehicles } from "@/controllers/booking.controller";
+import { fromPrice, quote } from "@/controllers/pricing.controller";
+import { gbp } from "@/lib/format";
 import { fillSearch, fmtDate } from "@/lib/ui";
 import QuickBook from "@/components/QuickBook";
 

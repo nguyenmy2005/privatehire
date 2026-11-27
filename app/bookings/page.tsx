@@ -2,11 +2,15 @@
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import SignInPrompt from "@/components/SignInPrompt";
-import { SERVICES } from "@/lib/data";
-import { currentUser } from "@/lib/auth";
+import { currentUser } from "@/controllers/auth.controller";
+import { SERVICES, available, bookings, canChange, driverOf, isFuture, saveBooking, vehicles } from "@/controllers/booking.controller";
+import { send } from "@/controllers/message.controller";
+import { offers } from "@/controllers/offer.controller";
+import { quote } from "@/controllers/pricing.controller";
+import { checkRoute, groupsFor, labelsFor, tripFare } from "@/controllers/route.controller";
+import { gbp } from "@/lib/format";
+import type { Booking, Review } from "@/models/booking.model";
 import { fmtDate, toast } from "@/lib/ui";
-import { Booking, Review, available, bookings, canChange, driverOf, gbp, isFuture, offers, quote, saveBooking, send, vehicles } from "@/lib/store";
-import { checkRoute, groupsFor, labelsFor, tripFare } from "@/lib/places";
 import PlacePicker from "@/components/PlacePicker";
 
 const STATUS: Record<string, string> = { confirmed: "bg-blue-100 text-blue-800", completed: "bg-green-100 text-green-800", cancelled: "bg-slate-200 text-slate-600" };

@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import SignInPrompt from "@/components/SignInPrompt";
-import { currentUser, updateUser, type User } from "@/lib/auth";
+import { currentUser, updateUser } from "@/controllers/auth.controller";
+import type { User } from "@/models/user.model";
 import { cardValid, digits, toast } from "@/lib/ui";
 
 export default function Account() {

@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Shell from "@/components/Shell";
 import BookFlow from "@/components/BookFlow";
-import { currentUser } from "@/lib/auth";
-import type { Trip } from "@/lib/store";
+import { currentUser } from "@/controllers/auth.controller";
+import { loadSearch } from "@/controllers/booking.controller";
+import type { Trip } from "@/models/booking.model";
 
 export default function Book() {
   const router = useRouter();
@@ -13,17 +14,12 @@ export default function Book() {
   const [staff, setStaff] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem("ph2_search");
-    if (!raw) {
+    const saved = loadSearch();
+    if (!saved) {
       router.replace("/");
       return;
     }
-    try {
-      setTrip(JSON.parse(raw) as Trip);
-    } catch {
-      router.replace("/");
-      return;
-    }
+    setTrip(saved);
     const u = currentUser();
     setEmail(u?.email ?? null);
     setStaff(u?.role === "staff");

@@ -1,7 +1,8 @@
 ﻿"use client";
 import { useState } from "react";
-import { login, register, type User } from "@/lib/auth";
-import { send } from "@/lib/store";
+import { login, register } from "@/controllers/auth.controller";
+import { send } from "@/controllers/message.controller";
+import type { User } from "@/models/user.model";
 import { afterLogin, cardValid, digits, flash } from "@/lib/ui";
 
 type Mode = "login" | "register";

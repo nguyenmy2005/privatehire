@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import SignInPrompt from "@/components/SignInPrompt";
-import { currentUser } from "@/lib/auth";
-import { Message, markRead, messages } from "@/lib/store";
+import { currentUser } from "@/controllers/auth.controller";
+import { markRead, messages } from "@/controllers/message.controller";
+import type { Message } from "@/models/message.model";
 
 export default function Inbox() {
   const [ready, setReady] = useState(false);

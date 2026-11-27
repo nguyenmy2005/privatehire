@@ -1,9 +1,9 @@
 ﻿"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SERVICES } from "@/lib/data";
-import { DURATION, isFuture, vehicles, type Trip } from "@/lib/store";
-import { checkRoute, groupsFor, labelsFor, optionsFor } from "@/lib/places";
+import { SERVICES, DURATION, isFuture, saveSearch, vehicles } from "@/controllers/booking.controller";
+import { checkRoute, groupsFor, labelsFor, optionsFor } from "@/controllers/route.controller";
+import type { Trip } from "@/models/booking.model";
 import PlacePicker from "./PlacePicker";
 import { isoDate } from "@/lib/ui";
 
@@ -43,7 +43,7 @@ export default function QuickBook({ service, seats, onClose }: { service?: strin
     const bad = checkRoute(svc, f.pickup, f.destination);
     if (bad) return setErr(bad);
     if (!isFuture(f.date, f.time)) return setErr("Please choose a date and time in the future.");
-    localStorage.setItem("ph2_search", JSON.stringify({ ...f, service: svc, size: seats ? String(seats) : undefined, vtype: vt || undefined }));
+    saveSearch({ ...f, service: svc, size: seats ? String(seats) : undefined, vtype: vt || undefined });
     router.push("/book");
   };
 

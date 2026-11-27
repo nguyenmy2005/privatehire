@@ -1,8 +1,9 @@
 ﻿"use client";
 import { useEffect, useState } from "react";
 import AuthModal from "./AuthModal";
-import { currentUser, logout, type User } from "@/lib/auth";
-import { unread } from "@/lib/store";
+import { currentUser, logout } from "@/controllers/auth.controller";
+import { unread } from "@/controllers/message.controller";
+import type { User } from "@/models/user.model";
 
 export default function Navbar() {
   const [modal, setModal] = useState<"" | "login" | "register">("");
